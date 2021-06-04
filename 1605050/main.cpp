@@ -182,8 +182,7 @@ bool is_identity_matrix(){
     return true;
 }
 };
-point eye,look,up;
-double fovY,aspectRatio,near_,far_;
+
 point point_init(string s)
 {
     stringstream ss(s);
@@ -195,6 +194,7 @@ point point_init(string s)
    point temp(values[0],values[1],values[2]);
    return temp;
 }
+
 struct Vector{
     double x,y,z;
     Vector(){};
@@ -208,6 +208,12 @@ struct Vector{
 	    res.x = x + p.x;
 	    res.y = y + p.y;
 	    res.z = z + p.z;
+	    return res; }
+Vector operator- (Vector p) {
+	    Vector res;
+	    res.x = x - p.x;
+	    res.y = y - p.y;
+	    res.z = z - p.z;
 	    return res; }
     Vector operator*(double k) {
 	    Vector res;
@@ -224,6 +230,20 @@ struct Vector{
 	    void print(){
 	    cout<<"Vector printing..."<<endl;
 	    cout<<"x: "<<x<<" y: "<<y<<" z: "<<z<<endl;
+	    }
+	    void scrutinize(){
+        if(x == -0){
+            x+=1;
+            x-=1;
+	    }
+	    if(y == -0){
+            y+=1;
+            y-=1;
+	    }
+	    if(z == -0){
+            z+=1;
+            z-=1;
+	    }
 	    }
 };
 double dotProduct(Vector vect_A, Vector vect_B)
@@ -243,7 +263,20 @@ Vector crossProduct(Vector vect_A, Vector vect_B)
      cross_P.x = vect_A.y * vect_B.z - vect_A.z * vect_B.y;
      cross_P.y = vect_A.z * vect_B.x - vect_A.x * vect_B.z;
      cross_P.z = vect_A.x * vect_B.y - vect_A.y * vect_B.x;
+     cross_P.scrutinize();
      return cross_P;
+}
+
+Vector vector_init(string s)
+{
+    stringstream ss(s);
+    double word;
+    vector<double> values;
+    while (ss >> word) {
+        values.push_back(word);
+    }
+   Vector temp(values[0],values[1],values[2]);
+   return temp;
 }
 
 Vector Rod(Vector x,Vector a,double angle){
@@ -256,11 +289,10 @@ Vector Rod(Vector x,Vector a,double angle){
     res = res +  crossProduct(a,x) * sinValue;
     return res;
 }
-
+Vector eye,look,up;
+double fovY,aspectRatio,near_,far_;
 int main()
 {
-int iteration;
-for (iteration=0;iteration<2;iteration++){
 matrix current_trans(4,4,"identity");
 //current_trans.print();
 stack<matrix> trans_stack;
@@ -275,15 +307,15 @@ while (getline (MyReadFile, myText)) {
 
     switch(lineCount){
     case 1:
-        eye = point_init(myText);
+        eye = vector_init(myText);
         //eye.print();
         break;
     case 2:
-        look = point_init(myText);
+        look = vector_init(myText);
        // look.print();
         break;
     case 3:
-        up = point_init(myText);
+        up = vector_init(myText);
         //up.print();
         break;
     case 4:
@@ -458,7 +490,7 @@ while (getline (MyReadFile, myText)) {
 }
 
 MyReadFile.close();
-string fName = "stage"+to_string(iteration+1)+".txt";
+string fName = "stage1.txt";
 ofstream MyFile(fName);
 
 for(i=0;i<triangles.size();i++){
@@ -466,8 +498,45 @@ for(i=0;i<triangles.size();i++){
     //triangles.pop_back();
     MyFile<<t<<endl;
 }
-cout<<"Exiting...\n";
 MyFile.close();
+//View Transformation
+
+Vector l,r,u;
+l = look - eye;
+l.normalize();
+r = crossProduct(l,up);
+r.normalize();
+u = crossProduct(r,l);
+
+matrix T_matrix(4,4,"identity");
+T_matrix.mat[3]= -eye.x;
+T_matrix.mat[7]= -eye.y;
+T_matrix.mat[11]= -eye.z;
+matrix R_matrix(4,4,"identity");
+R_matrix.mat[0] = r.x;
+R_matrix.mat[1] = r.y;
+R_matrix.mat[2] = r.z;
+R_matrix.mat[4] = u.x;
+R_matrix.mat[5] = u.y;
+R_matrix.mat[6] = u.z;
+R_matrix.mat[8] = -l.x;
+R_matrix.mat[9] = -l.y;
+R_matrix.mat[10] = -l.z;
+matrix V_matrix = R_matrix * T_matrix;
+MyFile.open("stage2.txt");
+for(i=0;i<triangles.size();i++){
+    triangle t = triangles.at(i);
+    t.print();
+    t.a = V_matrix * t.a;
+    t.b = V_matrix * t.b;
+    t.c = V_matrix * t.c;
+    t.print();
+    cout<<"Vcetor\n";
+    triangles.insert(triangles.begin()+i,t);
+    triangles.erase(triangles.begin()+i+1);
+    triangles.at(i).print();
+    MyFile<<t<<endl;
 }
+MyFile.close();
 return 0;
 }
