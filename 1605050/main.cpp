@@ -73,7 +73,7 @@ struct triangle
 	    c=z;
 	}
 friend ostream &operator<<( ostream &output, const triangle &t ) {
-         output <<  t.a.x << " " << t.a.y << " "<<t.a.z<<"\n"<< t.b.x << " " << t.b.y << " "<<t.b.z<<"\n"<<  t.c.x << " " << t.c.y << " "<<t.c.z<<"\n";
+         output << fixed<<setprecision(6)<< t.a.x << " " << t.a.y << " "<<t.a.z<<"\n"<< t.b.x << " " << t.b.y << " "<<t.b.z<<"\n"<<  t.c.x << " " << t.c.y << " "<<t.c.z<<"\n";
          return output;
       }
     void print(){
@@ -160,6 +160,12 @@ point operator*(point p){
     point r(res.mat[0],res.mat[1],res.mat[2],res.mat[3]);
     r.normalize();
     return r;
+}
+triangle operator*(triangle t){
+    t.a = *(this) * t.a;
+    t.b = *(this) * t.b;
+    t.c = *(this) * t.c;
+    return t;
 }
 bool operator==(matrix m2){
     int i,j;
@@ -284,7 +290,7 @@ Vector Rod(Vector x,Vector a,double angle){
     double cosValue,sinValue;
     cosValue = cos(angle * PI /180.0);
     sinValue = sin(angle * PI /180.0);
-    cout << fixed << setprecision(4) << cosValue<<" "<<sinValue <<endl;
+    cout << fixed << setprecision(6) << cosValue<<" "<<sinValue <<endl;
     res = x * cosValue + a * ((1 - cosValue)*dotProduct(a,x))  ;
     res = res +  crossProduct(a,x) * sinValue;
     return res;
@@ -526,15 +532,35 @@ matrix V_matrix = R_matrix * T_matrix;
 MyFile.open("stage2.txt");
 for(i=0;i<triangles.size();i++){
     triangle t = triangles.at(i);
-    t.print();
-    t.a = V_matrix * t.a;
-    t.b = V_matrix * t.b;
-    t.c = V_matrix * t.c;
-    t.print();
-    cout<<"Vcetor\n";
+    //t.print();
+    t = V_matrix * t;
+    //t.print();
     triangles.insert(triangles.begin()+i,t);
     triangles.erase(triangles.begin()+i+1);
-    triangles.at(i).print();
+    MyFile<<t<<endl;
+}
+MyFile.close();
+
+//Projection Transformation
+double fovX,t_value,r_value;
+fovX = fovY * aspectRatio;
+//cout<<fovX<<endl;
+t_value = near_ * tan(fovY*PI/360.0);
+r_value = near_ * tan(fovX*PI/360.0);
+//cout<<near_<<" "<<far_<<endl;
+//cout<<t_value<<" "<<r_value<<endl;
+matrix P_matrix(4,4);
+P_matrix.mat[0] = near_/r_value;
+P_matrix.mat[5] =near_/t_value;
+P_matrix.mat[10] = - (far_ + near_) /(far_ - near_);
+P_matrix.mat[11] =- (2 * far_ * near_)/(far_- near_);
+P_matrix.mat[14] = -1;
+MyFile.open("stage3.txt");
+for(i=0;i<triangles.size();i++){
+    triangle t = triangles.at(i);
+    t = P_matrix * t;
+    triangles.insert(triangles.begin()+i,t);
+    triangles.erase(triangles.begin()+i+1);
     MyFile<<t<<endl;
 }
 MyFile.close();
