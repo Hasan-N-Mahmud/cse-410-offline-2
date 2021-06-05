@@ -1,4 +1,5 @@
-
+#include "bitmap_image.hpp"
+#include "custom.hpp"
 #include <bits/stdc++.h>
 #include <stdlib.h>
 #include<iostream>
@@ -8,212 +9,6 @@
 #include <sstream>
 
 using namespace std;
-const double PI = 3.14159;
-struct point
-{
-	double x,y,z,w;
-	point(){
-        x=y=z=0;
-        w=1;
-        }
-	point(double a,double b,double c){
-	    x=a;
-	    y=b;
-	    z=c;
-	    w=1;
-	}
-	point(double a,double b,double c,double d){
-	    x=a;
-	    y=b;
-	    z=c;
-	    w=d;
-	}
-
-	point operator+ (point p) {
-	    point res;
-	    res.x = x + p.x;
-	    res.y = y + p.y;
-	    res.z = z + p.z;
-	    return res; }
-    void print(){
-        cout<<x<<"\t"<<y<<"\t"<<z<<"\t"<<w<<endl;
-    }
-    void normalize(){
-        if(w!=1){
-            x /= w;
-            y /= w;
-            z /= w;
-            w /= w;
-        }
-    }
-    void precision(){
-        x =roundf(x * 10000) / 10000.0 ;
-        y =roundf(y * 10000) / 10000.0;
-       z = roundf(z * 10000) / 10000.0;
-    }
-
-};
-
-struct triangle
-{
-	point a,b,c;
-	double boundary_values[2];
-	int color[3];
-	triange(){
-        color[0]=rand();
-        color[1]=rand();
-        color[2]=rand();
-        }
-	triangle(point x,point y,point z){
-	    a=x;
-	    b=y;
-	    c=z;
-	    color[0]=rand();
-        color[1]=rand();
-        color[2]=rand();
-        set_max_values();
-	}
-void	set_max_values(){
-        boundary_values[0]=a.x;
-        boundary_values[1]=a.y;
-
-        if(boundary_values[0] > b.x && b.x < c.x )
-            boundary_values[0]=b.x;
-        else if(boundary_values[0] > c.x)
-            boundary_values[0]=c.x;
-
-        if(boundary_values[1] < b.y && b.y > c.y )
-            boundary_values[1]=b.y;
-        else if(boundary_values[1] < c.y)
-            boundary_values[1]=c.y;
-    }
-friend ostream &operator<<( ostream &output, const triangle &t ) {
-         output << fixed<<setprecision(6)<< t.a.x << " " << t.a.y << " "<<t.a.z<<"\n"<< t.b.x << " " << t.b.y << " "<<t.b.z<<"\n"<<  t.c.x << " " << t.c.y << " "<<t.c.z<<"\n";
-         return output;
-      }
-    void print(){
-        cout<<"triangle printing"<<endl;
-        a.print();
-        b.print();
-        c.print();
-        cout<<endl;
-    }
-    void precision(){
-        a.precision();
-        b.precision();
-        c.precision();
-        }
-};
-
-struct matrix{
-    int row,col;
-    double * mat;
-    matrix(int a,int b){
-    row = a;
-    col = b;
-    mat = new double[row*col];
-        for (int i = 0; i < row; i++)
-        {
-            for (int j = 0; j < col; j++)
-                {
-                    mat[i*col+j] =0;
-                }
-    }
-    }
-matrix(int a,int b,double z,string str){
-    row = a;
-    col = b;
-    mat = new double[row*col];
-        for (int i = 0; i < row; i++)
-        {
-            for (int j = 0; j < col; j++)
-                {
-                    mat[i*col+j] =z;
-                }
-    }
-    }
-    matrix(int a,int b,string str){
-    row = a;
-    col = b;
-    mat = new double[row*col];
-        for (int i = 0; i < row; i++)
-        {
-            for (int j = 0; j < col; j++)
-                {
-                    if(i == j)
-                        mat[i*col+j] =1;
-                    else
-                    mat[i*col+j] =0;
-                }
-    }
-    }
-    void print(){
-    for (int i = 0; i < row; i++)
-        {
-            for (int j = 0; j < col; j++)
-                {
-                    cout << mat[i*col+j] << " ";
-                }
-            cout << endl;
-    }
-}
-
-matrix operator*(matrix m2){
-    matrix res(row,col);
-    int i, j, k;
-    for (i = 0; i < row; i++) {
-        for (j = 0; j < col; j++) {
-            for (k = 0; k < col; k++)
-                res.mat[i*col+j] += mat[i*col+k] * m2.mat[k*col+j];
-        }
-    }
-    return res;
-}
-
-point operator*(point p){
-    matrix res(4,1);
-    double arr[4];
-    arr[0]=p.x;
-    arr[1]=p.y;
-    arr[2]=p.z;
-    arr[3]=p.w;
-    int i, j;
-    for (i = 0; i < row; i++) {
-        for (j = 0; j < col; j++) {
-                res.mat[i] += mat[i*col+j] * arr[j];
-        }
-    }
-    point r(res.mat[0],res.mat[1],res.mat[2],res.mat[3]);
-    r.normalize();
-    return r;
-}
-triangle operator*(triangle t){
-    t.a = *(this) * t.a;
-    t.b = *(this) * t.b;
-    t.c = *(this) * t.c;
-    return t;
-}
-bool operator==(matrix m2){
-    int i,j;
-        for (i = 0; i < row; i++) {
-            for (j = 0; j < col; j++) {
-                if(mat[i*col+j] != m2.mat[i*col+j])
-                    return false;
-        }
-    }
-    return true;
-}
-bool is_identity_matrix(){
-    int i,j;
-        for (i = 0; i < row; i++) {
-            for (j = 0; j < col; j++) {
-                if((i==j && mat[i*col+j] !=1) || (i != j && mat[i*col+j] !=0))
-                    return false;
-        }
-    }
-    return true;
-}
-};
 
 point point_init(string s)
 {
@@ -588,6 +383,7 @@ for(i=0;i<triangles.size();i++){
     t.set_max_values();
     //t.print();
     //cout<<t.boundary_values[0]<<" "<<t.boundary_values[1]<<endl;
+    //cout<<t.boundary_values[2]<<" "<<t.boundary_values[3]<<endl;
     triangles.insert(triangles.begin()+i,t);
     triangles.erase(triangles.begin()+i+1);
     MyFile<<t<<endl;
@@ -617,17 +413,96 @@ switch(lineCount){
 }
 MyReadFile.close();
 cout<<screen_width<<" "<<scree_height<<" "<<left_limit_x<<" "<<bottom_limit_y<<" "<<z_near<<" "<<z_far<<endl;
-matrix Z_matrix(screen_width,scree_height,z_far,"z");
+Z_buffer z_buffer(screen_width,scree_height,z_far);
+//z_buffer.print();
 
-double dx,dy,top_y,left_x;
+double dx,dy,top_y,left_x,bottom_y,right_x;
 dx = -(2*left_limit_x)/screen_width;
 dy = -(2*bottom_limit_y)/scree_height;
 top_y = -bottom_limit_y-dy/2;
+bottom_y = bottom_limit_y + dy/2;
 left_x = left_limit_x + dx/2;
+right_x = -left_limit_x - dx/2;
 triangle temp(point(-1,10,0),point(-10,1,0),point(-2,-2,0));
+bitmap_image image(screen_width,scree_height);
+for(i=0;i<screen_width;i++){
+    for(j=0;j<500;j++)
+        image.set_pixel(i,j,0,0,0);
+}
 // Z-Buffer
+double scan_ty,scan_by,scan_lx,scan_rx,scan_zu,scan_zd;
+point a,b;
+for(i=0;i<triangles.size();i++){
+    triangle t = triangles.at(i);
+   if(t.boundary_values[2] < bottom_y)
+        scan_by = bottom_y;
+    else
+        scan_by = t.boundary_values[2];
 
-
+     if(t.boundary_values[3] > top_y)
+        scan_ty = top_y;
+    else
+        scan_ty = t.boundary_values[3];
+    double temp,temp2,dz;
+    while(scan_ty >= scan_by){
+            scan_lx = 0;
+            scan_rx = 0;
+            scan_zu = 0;
+            scan_zd = 0;
+        if((t.b.y - t.a.y) !=0){
+            temp = t.a.x + (scan_ty - t.a.y) * (t.b.x -t.a.x) / (t.b.y - t.a.y);
+            temp2 = t.a.z + (scan_ty - t.a.y) * (t.b.z -t.a.z) / (t.b.y - t.a.y);
+            if(temp >= t.boundary_values[0] && temp <= t.boundary_values[1] ){
+                if(temp < scan_lx)
+                {
+                    scan_lx = temp;
+                    scan_zd = temp2;
+                }
+                else{
+                    scan_rx = temp;
+                    scan_zu = temp2;
+                }
+            }
+        }
+        if((t.b.y - t.c.y) !=0){
+            temp = t.c.x + (scan_ty - t.c.y) * (t.b.x -t.c.x) / (t.b.y - t.c.y);
+            temp2 = t.c.z + (scan_ty - t.c.y) * (t.b.z -t.c.z) / (t.b.y - t.c.y);
+            if(temp >= t.boundary_values[0] && temp <= t.boundary_values[1] ){
+                if(temp < scan_lx)
+                {
+                    scan_lx = temp;
+                    scan_zd = temp2;
+                }
+                else{
+                    scan_rx = temp;
+                    scan_zu = temp2;
+                }
+        }}
+        if((t.c.y - t.a.y) !=0){
+            temp = t.a.x + (scan_ty - t.a.y) * (t.c.x -t.a.x) / (t.c.y - t.a.y);
+            temp2 = t.a.z + (scan_ty - t.a.y) * (t.c.z -t.a.z) / (t.c.y - t.a.y);
+            if(temp >= t.boundary_values[0] && temp <= t.boundary_values[1] ){
+                if(temp < scan_lx)
+                {
+                    scan_lx = temp;
+                    scan_zd = temp2;
+                }
+                else{
+                    scan_rx = temp;
+                    scan_zu = temp2;
+                }
+        }}
+        dz = (scan_zu - scan_zd)/((scan_rx - scan_lx)/dx);
+        k = s
+        while(scan_lx <=scan_rx){
+            if()
+            scan_lx+=dx;
+        }
+        scan_ty -= dy;
+    }
+}
+image.save_image("output.bmp");;
 
 return 0;
 }
+
